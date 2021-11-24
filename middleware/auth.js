@@ -60,8 +60,28 @@ function ensureLoggedIn(req, res, next) {
 
 function ensureAdmin(req, res, next) {
   try {
-    if (!res.locals.user) throw new UnauthorizedError();
     if (res.locals.user.isAdmin === false) {
+      throw new ForbiddenError();
+    }
+    return next();
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/** Middleware to use when they must be either an ADMIN or themself!.
+ *
+ * If not, raises Forbidden.
+ *
+ * Checks to make sure the user is either an an admin, or is logged in as themselves.
+ */
+
+function ensureAdminOrSelf(req, res, next) {
+  try {
+    if (
+      res.locals.user.isAdmin === false &&
+      res.locals.user.username != req.params.username
+    ) {
       throw new ForbiddenError();
     }
     return next();
@@ -74,4 +94,5 @@ module.exports = {
   authenticateJWT,
   ensureLoggedIn,
   ensureAdmin,
+  ensureAdminOrSelf,
 };
