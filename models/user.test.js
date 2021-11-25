@@ -1,3 +1,5 @@
+/** @format */
+
 "use strict";
 
 const {
@@ -140,6 +142,7 @@ describe("get", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobs: [1],
     });
   });
 
@@ -214,8 +217,7 @@ describe("update", function () {
 describe("remove", function () {
   test("works", async function () {
     await User.remove("u1");
-    const res = await db.query(
-        "SELECT * FROM users WHERE username='u1'");
+    const res = await db.query("SELECT * FROM users WHERE username='u1'");
     expect(res.rows.length).toEqual(0);
   });
 
@@ -225,6 +227,36 @@ describe("remove", function () {
       fail();
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
+    }
+  });
+});
+
+/************************************** apply */
+
+describe("apply", function () {
+  test("works", async function () {
+    let application = await User.apply("u1", 3);
+    expect(application).toEqual({
+      username: "u1",
+      job_id: 3,
+    });
+  });
+
+  test("error if faulty username", async function () {
+    try {
+      await User.apply("wrong-username", 1);
+      fail();
+    } catch (err) {
+      expect(err).toBeTruthy();
+    }
+  });
+
+  test("error if faulty id", async function () {
+    try {
+      await User.apply("u2", 9999);
+      fail();
+    } catch (err) {
+      expect(err).toBeTruthy();
     }
   });
 });

@@ -9,6 +9,7 @@ const {
   NotFoundError,
   BadRequestError,
   UnauthorizedError,
+  ExpressError,
 } = require("../expressError");
 
 const { BCRYPT_WORK_FACTOR } = require("../config.js");
@@ -137,8 +138,18 @@ class User {
     );
 
     const user = userRes.rows[0];
-
     if (!user) throw new NotFoundError(`No user: ${username}`);
+
+    const applicationRes = await db.query(
+      `SELECT job_id
+           FROM applications
+           WHERE username = $1`,
+      [username]
+    );
+
+    user.jobs = applicationRes.rows.map((j) => {
+      return j.job_id;
+    });
 
     return user;
   }
@@ -202,6 +213,33 @@ class User {
     const user = result.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+  }
+
+  /** Apply for a job
+   *
+   * This function creates a new file in the 'application' db table linking a particular user with a job.
+   *
+   */
+
+  static async apply(username, jobID) {
+    let results = await db.query(
+      `INSERT 
+          INTO applications
+          (username, job_id)
+          VALUES 
+          ($1, $2)
+          RETURNING username, job_id
+       `,
+      [username, jobID]
+    );
+
+    const application = results.rows[0];
+    console.log(application);
+
+    if (!results)
+      throw new ExpressError("There was a problem with your attempt to apply");
+
+    return application;
   }
 }
 

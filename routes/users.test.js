@@ -197,6 +197,7 @@ describe("GET /users/:username", function () {
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
+        jobs: [1],
       },
     });
   });
@@ -212,6 +213,7 @@ describe("GET /users/:username", function () {
         lastName: "U1L",
         email: "user1@user.com",
         isAdmin: false,
+        jobs: [1],
       },
     });
   });
@@ -367,5 +369,43 @@ describe("DELETE /users/:username", function () {
       .delete(`/users/nope`)
       .set("authorization", `Bearer ${u2Token}`);
     expect(resp.statusCode).toEqual(404);
+  });
+});
+
+/******************************** POST /users/[username]/jobs/[id] */
+
+describe("POST /users/:username/jobs/:id", function () {
+  test("fails for non-admin, non-self: apply", async function () {
+    const resp = await request(app)
+      .post("/users/u2/jobs/1")
+      .set("authorization", `Bearer ${u1Token}`);
+    expect(resp.statusCode).toEqual(403);
+  });
+
+  test("fails if faulty data: apply", async function () {
+    const resp = await request(app)
+      .post("/users/9999/jobs/9999")
+      .set("authorization", `Bearer ${u2Token}`);
+    expect(resp.statusCode).toEqual(500);
+  });
+
+  test("works for admin: apply", async function () {
+    const resp = await request(app)
+      .post("/users/u1/jobs/3")
+      .set("authorization", `Bearer ${u2Token}`);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      applied: 3,
+    });
+  });
+
+  test("works for self: apply", async function () {
+    const resp = await request(app)
+      .post("/users/u1/jobs/2")
+      .set("authorization", `Bearer ${u1Token}`);
+    expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toEqual({
+      applied: 2,
+    });
   });
 });
