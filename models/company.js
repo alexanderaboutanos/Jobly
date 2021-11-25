@@ -130,14 +130,14 @@ class Company {
   /** Given a company handle, return data about company.
    *
    * Returns { handle, name, description, numEmployees, logoUrl, jobs }
-   *   where jobs is [{ id, title, salary, equity, companyHandle }, ...]
+   *   where jobs is [{ id, title, salary, equity}, ...]
    *
    * Throws NotFoundError if not found.
    **/
 
   static async get(handle) {
     const companyRes = await db.query(
-      `SELECT handle,
+      `SELECT   handle,
                   name,
                   description,
                   num_employees AS "numEmployees",
@@ -147,12 +147,42 @@ class Company {
       [handle]
     );
 
-    const company = companyRes.rows[0];
-
+    let company = companyRes.rows[0];
     if (!company) throw new NotFoundError(`No company: ${handle}`);
+
+    const jobsRes = await db.query(
+      `SELECT   id,
+                title,
+                salary,
+                equity
+          FROM jobs
+          WHERE company_handle = $1`,
+      [handle]
+    );
+
+    // add the jobs onto the object
+    company.jobs = jobsRes.rows;
 
     return company;
   }
+
+  // THOUGHT TO USE THIS METHOD ABOVE,
+  // DECIDED AGAINST IT BECAUSE PULLING MULTIPLE JOBS
+  // const companyRes = await db.query(
+  //   `SELECT     c.handle,
+  //               c.name,
+  //               c.description,
+  //               c.num_employees AS "numEmployees",
+  //               c.logo_url AS "logoUrl",
+  //               j.id,
+  //               j.title,
+  //               j.salary,
+  //               j.equity
+  //        FROM companies AS c
+  //           JOIN jobs AS j ON c.handle = j.company_handle
+  //        WHERE handle = $1`,
+  //   [handle]
+  // );
 
   /** Update company data with `data`.
    *

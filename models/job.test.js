@@ -76,7 +76,7 @@ describe("findAll", function () {
         title: "job2",
         salary: 20000,
         equity: "0.02",
-        company_handle: "c2",
+        company_handle: "c1",
       },
       {
         id: expect.any(Number),
@@ -119,7 +119,7 @@ describe("findFilter", function () {
         title: "job2",
         salary: 20000,
         equity: "0.02",
-        company_handle: "c2",
+        company_handle: "c1",
       },
       {
         id: expect.any(Number),
